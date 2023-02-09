@@ -7,12 +7,12 @@ compilador: XC8
 proyecto: laboratorio 03
 hardware: PIC 16F887
 creado: 03/01/2023
-última modificación: 03/02/2023
+�ltima modificaci�n: 03/02/2023
  ********************************************************************************
  */
 //*****************************************************************************
 //*****************************************************************************
-// Palabra de configuración
+// Palabra de configuraci�n
 //*****************************************************************************
 // CONFIG1
 #pragma config FOSC = INTRC_NOCLKOUT// Oscillator Selection bits (RCIO oscillator: I/O function on RA6/OSC2/CLKOUT pin, RC on RA7/OSC1/CLKIN)
@@ -34,36 +34,60 @@ creado: 03/01/2023
 // Use project enums instead of #define for ON and OFF.
 
 //*****************************************************************************
-// Definición e importación de librerías
+// Definici�n e importaci�n de librer�as
 //*****************************************************************************
 #include <xc.h>
 #include <stdint.h>
 #include "SPI.h"
 #include "adc.h"
 //*****************************************************************************
-// Definición de variables
+// Definici�n de variables
 //*****************************************************************************
 #define _XTAL_FREQ 4000000
 
 uint8_t temporal = 0;
+
+//variables para contador
+int flag_antirrebote = 0;
+int flag_antirrebote2 = 0;
+
+uint8_t valor_adc;
+
+
+
 //*****************************************************************************
-// Definición de funciones para que se puedan colocar después del main de lo
+// Definici�n de funciones para que se puedan colocar despu�s del main de lo
 // contrario hay que colocarlos todas las funciones antes del main
 //*****************************************************************************
 void setup(void);
+void contador(void);
 //*****************************************************************************
-// Código de Interrupción
+// C�digo de Interrupci�n
 //*****************************************************************************
-void __interrupt() isr(void){
-   if(SSPIF == 1){
+void __interrupt() isr(void)
+{
+   if(SSPIF == 1)
+   {
        temporal = spiRead();
-       if (temporal == 1){
-        spiWrite(PORTB);
-        SSPIF = 0;}
+       if (temporal == 1)
+       {
+        spiWrite(valor_adc);
+       }
+       if(temporal == 0)
+       {
+         spiWrite(PORTD);
+       }
+        SSPIF = 0;
+    }
+   //INTERRUPCION DEL PORTB
+    if (INTCONbits.RBIF == 1)//revisar bandera de interrupcion
+    {
+        contador();
+        INTCONbits.RBIF = 0; //limpiar bandera
     }
 }
 //*****************************************************************************
-// Código Principal
+// C�digo Principal
 //*****************************************************************************
 void main(void) {
     ADC_Init(AN0);
@@ -74,13 +98,13 @@ void main(void) {
     //*************************************************************************
     while(1)
     {
-        PORTB = ADC_Read(0);
+        valor_adc = ADC_Read(0);
         __delay_ms(250);
     }
     return;
 }
 //*****************************************************************************
-// Función de Inicialización
+// Funci�n de Inicializaci�n
 //*****************************************************************************
 void setup(void){
       // oscilador a 4MHz
@@ -96,17 +120,51 @@ void setup(void){
 
     TRISA0 = 1;
 
-    TRISB = 0;
+    TRISB6 = 1;
+    TRISB7 = 1;
     TRISD = 0;
-
-    PORTB = 0;
-    PORTD = 0;
+    PORTD = 0x00;
 
     INTCONbits.GIE = 1;         // Habilitamos interrupciones
     INTCONbits.PEIE = 1;        // Habilitamos interrupciones PEIE
-    PIR1bits.SSPIF = 0;         // Borramos bandera interrupción MSSP
-    PIE1bits.SSPIE = 1;         // Habilitamos interrupción MSSP
+    PIR1bits.SSPIF = 0;         // Borramos bandera interrupci�n MSSP
+    PIE1bits.SSPIE = 1;         // Habilitamos interrupci�n MSSP
     TRISAbits.TRISA5 = 1;       // Slave Select
+
+    //interrupcion del puerto B (push buttons)
+  INTCONbits.RBIE = 1; //interrupciones del puerto B
+  OPTION_REGbits.nRBPU = 0; // habilitar pull ups individuales en B
+  WPUBbits.WPUB7 = 1;       //pullup en B7
+  WPUBbits.WPUB6 = 1;       //pullup en B6
+  IOCBbits.IOCB7 = 1;       //interrupt on change en B7
+  IOCBbits.IOCB6 = 1;       //interruot on change en B6
+  INTCONbits.RBIF = 0;      //bandera apagada
+
+
     spiInit(SPI_SLAVE_SS_EN, SPI_DATA_SAMPLE_MIDDLE, SPI_CLOCK_IDLE_LOW, SPI_IDLE_2_ACTIVE);
 
+}
+
+void contador(void)
+{
+  if (PORTBbits.RB6 == 0) //antirrebotes
+  {
+    flag_antirrebote = 1;
+  }
+  if (PORTBbits.RB6 == 1 && flag_antirrebote == 1) //si se presiona el PB RB6...
+  {
+      __delay_ms(10);
+      PORTD = PORTD + 1; //incrementamos en uno el puerto D
+      flag_antirrebote = 0;
+  }
+  if (PORTBbits.RB7 == 0)//antirrebotes
+  {
+      flag_antirrebote2 = 1;
+  }
+  if (PORTBbits.RB7 == 1 && flag_antirrebote2 == 1)//si se presiona el PB RB7...
+  {
+      __delay_ms(10);
+      PORTD = PORTD - 1;//decrementamos en uno el puerto D
+      flag_antirrebote2 = 0;
+  }
 }

@@ -7,12 +7,12 @@ compilador: XC8
 proyecto: laboratorio 03
 hardware: PIC 16F887
 creado: 03/01/2023
-última modificación: 03/02/2023
+�ltima modificaci�n: 03/02/2023
  ********************************************************************************
  */
 //*****************************************************************************
 //*****************************************************************************
-// Palabra de configuración
+// Palabra de configuraci�n
 //*****************************************************************************
 // CONFIG1
 #pragma config FOSC = INTRC_NOCLKOUT// Oscillator Selection bits (RCIO oscillator: I/O function on RA6/OSC2/CLKOUT pin, RC on RA7/OSC1/CLKIN)
@@ -34,25 +34,25 @@ creado: 03/01/2023
 // Use project enums instead of #define for ON and OFF.
 
 //*****************************************************************************
-// Definición e importación de librerías
+// Definici�n e importaci�n de librer�as
 //*****************************************************************************
 #include <xc.h>
 #include <stdint.h>
 #include "SPI.h"
 #include "adc.h"
 //*****************************************************************************
-// Definición de variables
+// Definici�n de variables
 //*****************************************************************************
 #define _XTAL_FREQ 4000000
 
 uint8_t temporal = 0;
 //*****************************************************************************
-// Definición de funciones para que se puedan colocar después del main de lo
+// Definici�n de funciones para que se puedan colocar despu�s del main de lo
 // contrario hay que colocarlos todas las funciones antes del main
 //*****************************************************************************
 void setup(void);
 //*****************************************************************************
-// Código de Interrupción
+// C�digo de Interrupci�n
 //*****************************************************************************
 void __interrupt() isr(void){
    if(SSPIF == 1){
@@ -63,7 +63,7 @@ void __interrupt() isr(void){
     }
 }
 //*****************************************************************************
-// Código Principal
+// C�digo Principal
 //*****************************************************************************
 void main(void) {
     ADC_Init(AN0);
@@ -80,7 +80,7 @@ void main(void) {
     return;
 }
 //*****************************************************************************
-// Función de Inicialización
+// Funci�n de Inicializaci�n
 //*****************************************************************************
 void setup(void){
       // oscilador a 4MHz
@@ -104,8 +104,8 @@ void setup(void){
 
     INTCONbits.GIE = 1;         // Habilitamos interrupciones
     INTCONbits.PEIE = 1;        // Habilitamos interrupciones PEIE
-    PIR1bits.SSPIF = 0;         // Borramos bandera interrupción MSSP
-    PIE1bits.SSPIE = 1;         // Habilitamos interrupción MSSP
+    PIR1bits.SSPIF = 0;         // Borramos bandera interrupci�n MSSP
+    PIE1bits.SSPIE = 1;         // Habilitamos interrupci�n MSSP
     TRISAbits.TRISA5 = 1;       // Slave Select
     spiInit(SPI_SLAVE_SS_EN, SPI_DATA_SAMPLE_MIDDLE, SPI_CLOCK_IDLE_LOW, SPI_IDLE_2_ACTIVE);
 

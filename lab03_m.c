@@ -50,6 +50,7 @@ creado: 03/01/2023
 char buffer[20]; //arreglo para guardar caracteres o variables y mostrar en la LCD
 unsigned char dato_1;
 unsigned char dato_2;
+unsigned char contador;
 //*****************************************************************************
 void setup(void);
 
@@ -67,30 +68,29 @@ void main(void) {
     while(1){
        PORTCbits.RC2 = 0;       //Slave Select
        __delay_ms(1);
-
        spiWrite(1);
-       dato_1 = spiRead();       //recibo informacion y coloco en portd
-       Lcd_Set_Cursor(1,1);
-       sprintf(buffer, "ADC1: %u  cont:  ", dato_1);
-        Lcd_Write_String(buffer);
-
+       dato_1 = spiRead();
        __delay_ms(1);
+       spiWrite(0);
+       contador = spiRead();
+      __delay_ms(1);
        PORTCbits.RC2 = 1;       //Slave Deselect
+
 
        PORTCbits.RC1 = 0;       //Slave Select
        __delay_ms(1);
-
        spiWrite(1);
-       dato_2 = spiRead();       //recibo informacion y coloco en portd
-       Lcd_Set_Cursor(2,1);
-       sprintf(buffer, "ADC2: %u    0  ", dato_2);
-        Lcd_Write_String(buffer);
-
+       dato_2 = spiRead();
        __delay_ms(1);
        PORTCbits.RC1 = 1;       //Slave Deselect
 
-       //__delay_ms(250);
-       //PORTB++;
+       Lcd_Set_Cursor(1,1);
+       sprintf(buffer, "ADC1: %u  ADC2:  ", dato_2);
+       Lcd_Write_String(buffer);
+
+        Lcd_Set_Cursor(2,1);
+       sprintf(buffer, "cont: %u    %u  ", dato_1, contador);
+        Lcd_Write_String(buffer);
     }
     return;
 }
@@ -110,7 +110,7 @@ void setup(void)
     ANSEL = 0;
     ANSELH = 0;
 
-    //colocamos el slave select como salida
+    //colocamos el slave select como salida 
     TRISC2 = 0;
     TRISC1 = 0;
 
